@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Servidores Mágicos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="magical-container">
+        <div class="sigil-header">
+            <div class="pentagram"></div>
+            <h1>Generador de Servidores Mágicos</h1>
+        </div>
+        
+        <div class="ritual-space">
+            <div class="correspondence-wheel">
+                <div class="element north">Tierra</div>
+                <div class="element east">Aire</div>
+                <div class="element south">Fuego</div>
+                <div class="element west">Agua</div>
+                <div class="element center">Espíritu</div>
+            </div>
+
+            <div class="chat-portal" id="chat-messages">
+                <!-- Los mensajes aparecerán aquí -->
+            </div>
+
+            <div class="archetypes-container">
+                <div class="archetype" data-type="guardian">Guardián</div>
+                <div class="archetype" data-type="messenger">Mensajero</div>
+                <div class="archetype" data-type="healer">Sanador</div>
+                <div class="archetype" data-type="warrior">Guerrero</div>
+            </div>
+        </div>
+
+        <div class="invocation-container">
+            <div class="pathworking-indicators">
+                <span class="path-node" data-path="1"></span>
+                <span class="path-node" data-path="2"></span>
+                <span class="path-node" data-path="3"></span>
+                <span class="path-node" data-path="4"></span>
+            </div>
+            <textarea id="user-input" placeholder="Escribe tu intención mágica aquí..." rows="1"></textarea>
+            <button id="send-button">
+                <i class="fas fa-magic"></i>
+            </button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
