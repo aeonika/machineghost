@@ -329,8 +329,20 @@
             }
         });
 
-        const API_KEY = 'AIzaSyDLJCMWQCOBWOSG9rGtr2XicZ_4MHk0X7E';
-        const genAI = new GoogleGenerativeAI(API_KEY);
+        // Configuración de APIs múltiples
+        const API_KEYS = [
+            'AIzaSyDLJCMWQCOBWOSG9rGtr2XicZ_4MHk0X7E',
+            'AIzaSyA27500Opq-gNre8HpuYZg6QvJsCIh4WUA',
+            'AIzaSyA9z9U61Kl5WqH28yuG6N9xamq6azJglfA'
+        ];
+
+        let currentApiIndex = 0;
+        let lastSuccessfulApiIndex = 0;
+
+        const getNextApi = () => {
+            currentApiIndex = (currentApiIndex + 1) % API_KEYS.length;
+            return new GoogleGenerativeAI(API_KEYS[currentApiIndex]);
+        };
 
         const loading = document.getElementById('loading');
         const responseText = document.getElementById('responseText');
@@ -338,7 +350,6 @@
         const inputText = document.getElementById('inputText');
 
         const formatResponse = (text) => {
-            // Asegurar que haya espacios después de los puntos y signos de puntuación
             return text
                 .replace(/\./g, '. ')
                 .replace(/,/g, ', ')
@@ -350,6 +361,24 @@
                 .trim();
         };
 
+        const tryGenerateContent = async (prompt, attemptCount = 0) => {
+            if (attemptCount >= API_KEYS.length) {
+                throw new Error('Todos los APIs han fallado');
+            }
+
+            try {
+                const genAI = new GoogleGenerativeAI(API_KEYS[currentApiIndex]);
+                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp"});
+                const result = await model.generateContent(prompt);
+                lastSuccessfulApiIndex = currentApiIndex;
+                return result;
+            } catch (error) {
+                console.warn(`API ${currentApiIndex + 1} falló:`, error);
+                currentApiIndex = (currentApiIndex + 1) % API_KEYS.length;
+                return tryGenerateContent(prompt, attemptCount + 1);
+            }
+        };
+
         const handleGeneration = async () => {
             if (!inputText.value.trim()) return;
 
@@ -358,13 +387,15 @@
             generateButton.disabled = true;
 
             try {
-                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp"});
+                // Comenzar con la última API exitosa
+                currentApiIndex = lastSuccessfulApiIndex;
+                
                 const prompt = `Actúa como Lilu, una demoniza experta en magia del caos. Responde a esta consulta: ${inputText.value}. 
                               Tu respuesta debe ser misteriosa y ocultista, pero mantén un tono seductor y sabio. 
                               Incluye referencias a la magia del caos y símbolos esotéricos cuando sea apropiado.
                               Asegúrate de usar puntuación y espaciado adecuado para que el texto sea legible.`;
 
-                const result = await model.generateContent(prompt);
+                const result = await tryGenerateContent(prompt);
                 const response = await result.response;
                 loading.style.display = 'none';
                 responseText.style.opacity = '1';
@@ -385,12 +416,59 @@
                 
                 writeText();
             } catch (error) {
-                console.error('Error en la invocación:', error);
+                console.error('Error en todas las APIs:', error);
                 loading.style.display = 'none';
-                responseText.innerText = '⚠️ Los espíritus del caos están inquietos. Intenta de nuevo más tarde.';
+                responseText.innerText = '⚠️ Los espíritus del caos están demasiado inquietos. Ningún portal responde. Intenta de nuevo más tarde.';
                 generateButton.disabled = false;
             }
         };
+
+        // Agregar indicador visual de API activa
+        const createApiIndicator = () => {
+            const indicatorContainer = document.createElement('div');
+            indicatorContainer.style.cssText = `
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                display: flex;
+                gap: 5px;
+                background: rgba(0, 0, 0, 0.7);
+                padding: 5px;
+                border-radius: 5px;
+                z-index: 1000;
+            `;
+
+            API_KEYS.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.style.cssText = `
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: ${index === currentApiIndex ? '#8B0000' : '#333'};
+                    transition: background-color 0.3s ease;
+                `;
+                dot.id = `api-indicator-${index}`;
+                indicatorContainer.appendChild(dot);
+            });
+
+            document.body.appendChild(indicatorContainer);
+        };
+
+        const updateApiIndicator = () => {
+            API_KEYS.forEach((_, index) => {
+                const dot = document.getElementById(`api-indicator-${index}`);
+                if (dot) {
+                    dot.style.backgroundColor = index === currentApiIndex ? '#8B0000' : '#333';
+                }
+            });
+        };
+
+        createApiIndicator();
+
+        // Observador para actualizar el indicador
+        setInterval(() => {
+            updateApiIndicator();
+        }, 1000);
 
         generateButton.addEventListener('click', handleGeneration);
         inputText.addEventListener('keypress', (e) => {
