@@ -1,4 +1,4 @@
-const API_KEY = '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';
+const API_KEY = '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';
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Contexto del sistema para Lilu
